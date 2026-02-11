@@ -46,6 +46,7 @@ brews:
     repository:
       owner: tirthpatell
       name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     homepage: "https://github.com/tirthpatell/mdr"
     description: "Markdown renderer, editor, and linter for the terminal"
     license: "MIT"
