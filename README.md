@@ -4,6 +4,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/tirthpatell/mdr.svg)](https://pkg.go.dev/github.com/tirthpatell/mdr)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Release](https://img.shields.io/github/v/release/tirthpatell/mdr)](https://github.com/tirthpatell/mdr/releases)
+[![codecov](https://codecov.io/gh/tirthpatell/mdr/branch/main/graph/badge.svg)](https://codecov.io/gh/tirthpatell/mdr)
 
 Markdown renderer, editor, and linter for the terminal.
 
