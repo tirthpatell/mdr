@@ -1,0 +1,54 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - id: mdr
+    main: .
+    binary: mdr
+    ldflags:
+      - -s -w -X github.com/tirthpatell/mdr/cmd.version={{.Version}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: mdr
+    format: tar.gz
+    name_template: "mdr_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+
+brews:
+  - name: mdr
+    repository:
+      owner: tirthpatell
+      name: homebrew-tap
+    homepage: "https://github.com/tirthpatell/mdr"
+    description: "Markdown renderer, editor, and linter for the terminal"
+    license: "MIT"
+    install: |
+      bin.install "mdr"
+    test: |
+      system "#{bin}/mdr", "version"

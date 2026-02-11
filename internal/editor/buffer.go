@@ -1,0 +1,106 @@
+package editor
+
+import (
+	"strings"
+)
+
+type Buffer struct {
+	lines    []string
+	modified bool
+}
+
+func NewBuffer(content string) *Buffer {
+	lines := strings.Split(content, "\n")
+	if len(lines) == 0 {
+		lines = []string{""}
+	}
+	return &Buffer{lines: lines}
+}
+
+func (b *Buffer) LineCount() int {
+	return len(b.lines)
+}
+
+func (b *Buffer) GetLine(row int) string {
+	if row < 0 || row >= len(b.lines) {
+		return ""
+	}
+	return b.lines[row]
+}
+
+func (b *Buffer) InsertChar(row, col int, ch rune) {
+	if row < 0 || row >= len(b.lines) {
+		return
+	}
+	line := b.lines[row]
+	if col > len(line) {
+		col = len(line)
+	}
+	b.lines[row] = line[:col] + string(ch) + line[col:]
+	b.modified = true
+}
+
+func (b *Buffer) DeleteChar(row, col int) {
+	if row < 0 || row >= len(b.lines) {
+		return
+	}
+	line := b.lines[row]
+	if col < 0 || col >= len(line) {
+		return
+	}
+	b.lines[row] = line[:col] + line[col+1:]
+	b.modified = true
+}
+
+func (b *Buffer) Backspace(row, col int) {
+	if col > 0 {
+		b.DeleteChar(row, col-1)
+	}
+}
+
+func (b *Buffer) InsertNewline(row, col int) {
+	if row < 0 || row >= len(b.lines) {
+		return
+	}
+	line := b.lines[row]
+	if col > len(line) {
+		col = len(line)
+	}
+	before := line[:col]
+	after := line[col:]
+
+	newLines := make([]string, 0, len(b.lines)+1)
+	newLines = append(newLines, b.lines[:row]...)
+	newLines = append(newLines, before, after)
+	newLines = append(newLines, b.lines[row+1:]...)
+	b.lines = newLines
+	b.modified = true
+}
+
+// JoinLines joins line `row` with the line above it. Returns the column where the cursor should be.
+func (b *Buffer) JoinLines(row int) int {
+	if row <= 0 || row >= len(b.lines) {
+		return 0
+	}
+	col := len(b.lines[row-1])
+	b.lines[row-1] += b.lines[row]
+
+	newLines := make([]string, 0, len(b.lines)-1)
+	newLines = append(newLines, b.lines[:row]...)
+	newLines = append(newLines, b.lines[row+1:]...)
+	b.lines = newLines
+	b.modified = true
+	return col
+}
+
+func (b *Buffer) String() string {
+	return strings.Join(b.lines, "\n")
+}
+
+func (b *Buffer) Modified() bool {
+	return b.modified
+}
+
+func (b *Buffer) ResetModified() {
+	b.modified = false
+}
