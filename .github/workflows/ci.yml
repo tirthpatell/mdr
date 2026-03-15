@@ -24,6 +24,8 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.out
+          slug: tirthpatell/mdr
+          fail_ci_if_error: true
       - run: go vet ./...
 
   build:
