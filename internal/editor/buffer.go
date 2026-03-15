@@ -12,9 +12,6 @@ type Buffer struct {
 
 func NewBuffer(content string) *Buffer {
 	lines := strings.Split(content, "\n")
-	if len(lines) == 0 {
-		lines = []string{""}
-	}
 	return &Buffer{lines: lines}
 }
 

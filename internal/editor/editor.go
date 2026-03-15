@@ -125,6 +125,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else if m.cursorRow > 0 {
 				m.cursorRow--
 				m.cursorCol = m.buffer.LineLen(m.cursorRow)
+				m.scrollToCursor()
 			}
 			return m, nil
 
@@ -135,6 +136,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else if m.cursorRow < m.buffer.LineCount()-1 {
 				m.cursorRow++
 				m.cursorCol = 0
+				m.scrollToCursor()
 			}
 			return m, nil
 
