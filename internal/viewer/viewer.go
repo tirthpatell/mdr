@@ -85,7 +85,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			case tea.KeyBackspace:
 				if len(m.searchInput) > 0 {
-					m.searchInput = m.searchInput[:len(m.searchInput)-1]
+					runes := []rune(m.searchInput)
+					m.searchInput = string(runes[:len(runes)-1])
 				}
 				return m, nil
 			case tea.KeyRunes:
