@@ -1,0 +1,20 @@
+stages:
+  - test
+  - build
+
+test:
+  stage: test
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - go test ./... -v -race
+    - go vet ./...
+
+build:
+  stage: build
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - go build .
