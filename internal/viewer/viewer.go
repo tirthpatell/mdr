@@ -63,6 +63,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.height = msg.Height
 		m.width = msg.Width
+		if m.offset > m.maxOffset() {
+			m.offset = m.maxOffset()
+		}
 		return m, nil
 
 	case tea.KeyMsg:

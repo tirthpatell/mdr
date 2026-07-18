@@ -33,8 +33,7 @@ func parseAST(source []byte) ast.Node {
 	return md.Parser().Parse(reader)
 }
 
-func checkHeadingHierarchy(source []byte) []Issue {
-	doc := parseAST(source)
+func checkHeadingHierarchy(doc ast.Node, source []byte) []Issue {
 	var issues []Issue
 	prevLevel := 0
 
@@ -59,8 +58,7 @@ func checkHeadingHierarchy(source []byte) []Issue {
 	return issues
 }
 
-func checkDuplicateHeadings(source []byte) []Issue {
-	doc := parseAST(source)
+func checkDuplicateHeadings(doc ast.Node, source []byte) []Issue {
 	var issues []Issue
 	seen := make(map[string]int) // text -> first line
 
@@ -88,8 +86,7 @@ func checkDuplicateHeadings(source []byte) []Issue {
 	return issues
 }
 
-func checkEmptyLinks(source []byte) []Issue {
-	doc := parseAST(source)
+func checkEmptyLinks(doc ast.Node, source []byte) []Issue {
 	var issues []Issue
 
 	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -143,8 +140,7 @@ func checkTrailingWhitespace(source []byte) []Issue {
 	return issues
 }
 
-func checkEmptySections(source []byte) []Issue {
-	doc := parseAST(source)
+func checkEmptySections(doc ast.Node, source []byte) []Issue {
 	var issues []Issue
 	var prevHeading *ast.Heading
 	var prevLine int
@@ -190,11 +186,32 @@ func lineNumber(source []byte, n ast.Node) int {
 			return bytes.Count(source[:seg.Start], []byte("\n")) + 1
 		}
 	}
-	// fallback: walk to first text child
-	for child := n.FirstChild(); child != nil; child = child.NextSibling() {
-		if t, ok := child.(*ast.Text); ok {
-			return bytes.Count(source[:t.Segment.Start], []byte("\n")) + 1
+	// fallback: first text descendant at any depth
+	if start, ok := firstTextStart(n); ok {
+		return bytes.Count(source[:start], []byte("\n")) + 1
+	}
+	// fallback for inline nodes with no text (e.g. `[]()`): nearest block ancestor
+	for parent := n.Parent(); parent != nil; parent = parent.Parent() {
+		if parent.Type() == ast.TypeBlock {
+			lines := parent.Lines()
+			if lines.Len() > 0 {
+				seg := lines.At(0)
+				return bytes.Count(source[:seg.Start], []byte("\n")) + 1
+			}
 		}
 	}
 	return 0
+}
+
+// firstTextStart returns the source offset of the first Text descendant of n.
+func firstTextStart(n ast.Node) (int, bool) {
+	if t, ok := n.(*ast.Text); ok {
+		return t.Segment.Start, true
+	}
+	for child := n.FirstChild(); child != nil; child = child.NextSibling() {
+		if start, ok := firstTextStart(child); ok {
+			return start, true
+		}
+	}
+	return 0, false
 }

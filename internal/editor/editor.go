@@ -292,8 +292,14 @@ func (m Model) View() string {
 			if col > len(runes) {
 				col = len(runes)
 			}
-			displayLine := string(runes[:col]) + "\u2588" + string(runes[col:])
-			editorLines = append(editorLines, lineNum+" "+cursorLineStyle.Render(truncate(displayLine, editW-6)))
+			// Scroll the cursor line horizontally so the cursor stays visible
+			avail := editW - 6
+			start := 0
+			if avail > 0 && col >= avail {
+				start = col - avail + 1
+			}
+			displayLine := string(runes[start:col]) + "\u2588" + string(runes[col:])
+			editorLines = append(editorLines, lineNum+" "+cursorLineStyle.Render(truncate(displayLine, avail)))
 		} else {
 			editorLines = append(editorLines, lineNum+" "+truncate(line, editW-6))
 		}
