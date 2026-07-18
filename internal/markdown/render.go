@@ -3,19 +3,34 @@ package markdown
 import (
 	"io"
 	"os"
+	"sync"
 
 	"github.com/charmbracelet/glamour"
 )
 
+// The renderer is cached because glamour.NewTermRenderer is expensive
+// (style detection and setup) and the editor renders a preview on every
+// keystroke. TermRenderer is not safe for concurrent use, so guard it.
+var (
+	rendererMu   sync.Mutex
+	renderer     *glamour.TermRenderer
+	rendererErr  error
+	rendererOnce sync.Once
+)
+
 // Render takes a markdown string and returns ANSI-styled terminal output.
 func Render(input string) (string, error) {
-	renderer, err := glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
-		glamour.WithWordWrap(0),
-	)
-	if err != nil {
-		return "", err
+	rendererOnce.Do(func() {
+		renderer, rendererErr = glamour.NewTermRenderer(
+			glamour.WithAutoStyle(),
+			glamour.WithWordWrap(0),
+		)
+	})
+	if rendererErr != nil {
+		return "", rendererErr
 	}
+	rendererMu.Lock()
+	defer rendererMu.Unlock()
 	return renderer.Render(input)
 }
 

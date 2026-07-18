@@ -56,9 +56,13 @@ func init() {
 	rootCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if len(args) == 1 {
 			info, err := os.Stat(args[0])
-			if err == nil && !info.IsDir() {
-				return viewCmd.RunE(viewCmd, args)
+			if err != nil {
+				return err
 			}
+			if info.IsDir() {
+				return fmt.Errorf("%s is a directory", args[0])
+			}
+			return viewCmd.RunE(viewCmd, args)
 		}
 		// Check stdin
 		stat, _ := os.Stdin.Stat()

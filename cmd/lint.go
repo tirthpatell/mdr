@@ -19,7 +19,20 @@ var lintCmd = &cobra.Command{
 		warnStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("11"))
 		fileStyle := lipgloss.NewStyle().Bold(true)
 
+		printIssues := func(name string, issues []linter.Issue) {
+			fmt.Println(fileStyle.Render(name))
+			for _, issue := range issues {
+				prefix := warnStyle.Render("warning")
+				if issue.Severity == linter.SeverityError {
+					prefix = errorStyle.Render("error")
+				}
+				fmt.Printf("  line %d: %s %s (%s)\n", issue.Line, prefix, issue.Message, issue.Rule)
+			}
+			fmt.Println()
+		}
+
 		totalIssues := 0
+		readErrors := 0
 
 		if len(args) == 0 || (len(args) == 1 && args[0] == "-") {
 			stat, _ := os.Stdin.Stat()
@@ -31,15 +44,7 @@ var lintCmd = &cobra.Command{
 				return fmt.Errorf("error reading stdin: %w", err)
 			}
 			if len(issues) > 0 {
-				fmt.Println(fileStyle.Render("<stdin>"))
-				for _, issue := range issues {
-					prefix := warnStyle.Render("warning")
-					if issue.Severity == linter.SeverityError {
-						prefix = errorStyle.Render("error")
-					}
-					fmt.Printf("  line %d: %s %s (%s)\n", issue.Line, prefix, issue.Message, issue.Rule)
-				}
-				fmt.Println()
+				printIssues("<stdin>", issues)
 				totalIssues += len(issues)
 			}
 		} else {
@@ -47,25 +52,19 @@ var lintCmd = &cobra.Command{
 				issues, err := linter.LintFile(path)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "error reading %s: %v\n", path, err)
+					readErrors++
 					continue
 				}
-				if len(issues) == 0 {
-					continue
+				if len(issues) > 0 {
+					printIssues(path, issues)
+					totalIssues += len(issues)
 				}
-
-				fmt.Println(fileStyle.Render(path))
-				for _, issue := range issues {
-					prefix := warnStyle.Render("warning")
-					if issue.Severity == linter.SeverityError {
-						prefix = errorStyle.Render("error")
-					}
-					fmt.Printf("  line %d: %s %s (%s)\n", issue.Line, prefix, issue.Message, issue.Rule)
-				}
-				fmt.Println()
-				totalIssues += len(issues)
 			}
 		}
 
+		if readErrors > 0 {
+			return fmt.Errorf("failed to read %d file(s)", readErrors)
+		}
 		if totalIssues > 0 {
 			return fmt.Errorf("found %d issue(s)", totalIssues)
 		}

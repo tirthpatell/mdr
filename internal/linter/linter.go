@@ -8,12 +8,13 @@ import (
 
 // Lint runs all lint rules against the given markdown source and returns issues sorted by line number.
 func Lint(source []byte) []Issue {
+	doc := parseAST(source)
 	var issues []Issue
-	issues = append(issues, checkHeadingHierarchy(source)...)
-	issues = append(issues, checkDuplicateHeadings(source)...)
-	issues = append(issues, checkEmptyLinks(source)...)
+	issues = append(issues, checkHeadingHierarchy(doc, source)...)
+	issues = append(issues, checkDuplicateHeadings(doc, source)...)
+	issues = append(issues, checkEmptyLinks(doc, source)...)
 	issues = append(issues, checkTrailingWhitespace(source)...)
-	issues = append(issues, checkEmptySections(source)...)
+	issues = append(issues, checkEmptySections(doc, source)...)
 
 	sort.Slice(issues, func(i, j int) bool {
 		return issues[i].Line < issues[j].Line
